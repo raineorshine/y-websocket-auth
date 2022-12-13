@@ -248,6 +248,7 @@ export class WebsocketProvider extends Observable {
    * @param {boolean} [opts.connect]
    * @param {awarenessProtocol.Awareness} [opts.awareness]
    * @param {Object<string,string>} [opts.params]
+   * @param {string} [opts.auth]
    * @param {typeof WebSocket} [opts.WebSocketPolyfill] Optionall provide a WebSocket polyfill
    * @param {number} [opts.resyncInterval] Request server state every `resyncInterval` milliseconds
    * @param {number} [opts.maxBackoffTime] Maximum amount of time to wait before trying to reconnect (we try to reconnect using exponential backoff)
@@ -257,7 +258,7 @@ export class WebsocketProvider extends Observable {
     connect = true,
     awareness = new awarenessProtocol.Awareness(doc),
     params = {},
-    pub = null,
+    auth,
     WebSocketPolyfill = WebSocket,
     resyncInterval = -1,
     maxBackoffTime = 2500,
@@ -270,7 +271,7 @@ export class WebsocketProvider extends Observable {
     }
     const encodedParams = url.encodeQueryParams(params)
     this.maxBackoffTime = maxBackoffTime
-    this.pub = pub
+    this.auth = auth
     this.bcChannel = serverUrl + '/' + roomname
     this.url = serverUrl + '/' + roomname +
       (encodedParams.length === 0 ? '' : '?' + encodedParams)
@@ -413,7 +414,7 @@ export class WebsocketProvider extends Observable {
       }
       this.ws.onopen = event => {
         if (!this.ws) return
-        this.ws.send(pub)
+        this.ws.send(JSON.stringify({ type: 'auth', auth }))
       }
     }
     onConnecting()

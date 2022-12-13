@@ -30,16 +30,44 @@ wss.on('connection', (conn, req, { docName = req.url.slice(1).split('?')[0], gc 
 
 const onMessage = async (conn, doc, message) => {
   if (typeof message === 'string') {
-    if (!permissions[conn.docName]) {
-      permissions[conn.docName] = message
+    let json
+    try {
+      json = JSON.parse(message)
+      if (!json.auth) {
+        console.error('auth required')
+        return
+      }
+      switch(json.type) {
+        case 'auth':
+          if (!permissions[conn.docName]) {
+            permissions[conn.docName] = {
+              [json.auth]: 'owner'
+            }
+          }
+          break;
+        case 'share':
+          if (!permissions[conn.docName]?.[json.auth] !== 'owner') {
+            conn.send('access-denied')
+            return
+          }
+          break;
+        default:
+          break;
+      }
     }
-    conn.authenticated = permissions[conn.docName] === message
+    catch (e) {
+      console.error('invalid json', message)
+      return
+    }
+
+    conn.authenticated = permissions[conn.docName]?.[json.auth] === 'owner'
+
     if (conn.authenticated) {
-      console.log('authenticated:', message)
+      console.log('authenticated:', json.auth)
       conn.send('authenticated')
       setupWSConnection(conn, conn.req, { docName: conn.docName, gc: conn.gc })
     } else {
-      console.log('access denied:', message)
+      console.log('access denied:', json.auth)
       conn.send('access-denied')
       conn.close()
     }
