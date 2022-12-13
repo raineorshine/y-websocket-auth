@@ -4,7 +4,7 @@
 
 /* eslint-env browser */
 
-import * as Y from 'yjs' // eslint-disable-line
+import * as Y from 'yjs'
 import * as bc from 'lib0/broadcastchannel'
 import * as time from 'lib0/time'
 import * as encoding from 'lib0/encoding'
@@ -134,6 +134,9 @@ const setupWS = (provider) => {
     provider.wsconnecting = true
     provider.wsconnected = false
     provider.synced = false
+    provider.emit('status', [{
+      status: 'connecting'
+    }])
 
     websocket.onmessage = (event) => {
       provider.wsLastMessageReceived = time.getUnixTime()
@@ -254,6 +257,7 @@ export class WebsocketProvider extends Observable {
     connect = true,
     awareness = new awarenessProtocol.Awareness(doc),
     params = {},
+    pub = null,
     WebSocketPolyfill = WebSocket,
     resyncInterval = -1,
     maxBackoffTime = 2500,
@@ -266,6 +270,7 @@ export class WebsocketProvider extends Observable {
     }
     const encodedParams = url.encodeQueryParams(params)
     this.maxBackoffTime = maxBackoffTime
+    this.pub = pub
     this.bcChannel = serverUrl + '/' + roomname
     this.url = serverUrl + '/' + roomname +
       (encodedParams.length === 0 ? '' : '?' + encodedParams)
@@ -377,6 +382,47 @@ export class WebsocketProvider extends Observable {
     if (connect) {
       this.connect()
     }
+
+    /** Authenticate with the websocket provider. */
+    const onConnecting = () => {
+      if (!this.ws) return
+      const _onmessage = this.ws.onmessage
+      const _onopen = this.ws.onopen
+      this.ws.onmessage = event => {
+        if (!this.ws) return
+        const { data } = event
+        console.log('message', data)
+        if (typeof data === 'string') {
+          switch (data) {
+            case 'authenticated':
+              console.log('authenticated')
+              this.ws.onmessage = _onmessage
+              if (_onopen) {
+                _onopen.call(this.ws, event)
+              }
+              break
+            case 'access-denied':
+              console.log('access denied')
+              this.disconnect()
+              break
+            default:
+              console.log('unknown string message', data)
+              break
+          }
+        }
+      }
+      this.ws.onopen = event => {
+        if (!this.ws) return
+        this.ws.send(pub)
+      }
+    }
+    onConnecting()
+
+    this.on('status', ({ status }) => {
+      if (status === 'connecting') {
+        onConnecting()
+      }
+    })
   }
 
   /**
