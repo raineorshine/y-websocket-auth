@@ -3,6 +3,7 @@
 /**
  * @type {any}
  */
+const Y = require('yjs')
 const WebSocket = require('ws')
 const http = require('http')
 const wss = new WebSocket.Server({ noServer: true })
@@ -10,6 +11,7 @@ const setupWSConnection = require('./utils.js').setupWSConnection
 
 const host = process.env.HOST || 'localhost'
 const port = process.env.PORT || 1234
+const permissionsDir = process.env.PERMISSIONS_DIR || './.permissions.level'
 
 const server = http.createServer((request, response) => {
   response.writeHead(200, { 'Content-Type': 'text/plain' })
@@ -17,7 +19,7 @@ const server = http.createServer((request, response) => {
 })
 
 /**
- * Per-document permissions.
+ * Per-document permissions. Persisted to PERMISSIONS_DIR (default: .permissions.level)
  *
  * @example
  *   {
@@ -26,12 +28,36 @@ const server = http.createServer((request, response) => {
  *     }
  *   }
 */
-const permissions = {}
+const docName = 'permissions'
+const ydoc = new Y.Doc()
+const yPermissions = ydoc.getMap(docName)
+const LeveldbPersistence = require('y-leveldb').LeveldbPersistence
+const ldb = new LeveldbPersistence(permissionsDir)
+;(async () => {
+  const persistedYdoc = await ldb.getYDoc('permissions')
+  const newUpdates = Y.encodeStateAsUpdate(ydoc)
+  ldb.storeUpdate(docName, newUpdates)
+  Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(persistedYdoc))
+  ydoc.on('update', update => {
+    ldb.storeUpdate(docName, update)
+  })
+})()
 
 /** Authenticates the access token. */
 const authenticate = (docid, accessToken, { permission } = {}) => {
-  const docPermissions = permissions[docid]
-  return docPermissions && docPermissions[accessToken] === (permission || 'owner')
+  const docPermissions = yPermissions.get(docid)
+  console.log({ docPermissions })
+
+  // if the document has no owner, automatically assign the current user as owner
+  if (!docPermissions) {
+    console.log('assigning owner')
+    yPermissions.set(docid, {
+      [accessToken]: 'owner'
+    })
+    return true
+  }
+
+  return docPermissions[accessToken] === (permission || 'owner')
 }
 
 wss.on('connection', (conn, req, { docName = req.url.slice(1).split('?')[0], gc = true } = {}) => {
@@ -63,11 +89,8 @@ const onMessage = async (conn, doc, message) => {
 
       switch (json.type) {
         case 'auth':
-          if (!permissions[conn.docName]) {
-            permissions[conn.docName] = {
-              [json.auth]: 'owner'
-            }
-          }
+          // noop endpoint
+          // handled in authenticate
           break
         case 'share':
           if (!secure()) return
