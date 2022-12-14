@@ -16,7 +16,23 @@ const server = http.createServer((request, response) => {
   response.end('okay')
 })
 
+/**
+ * Per-document permissions.
+ *
+ * @example
+ *   {
+ *     [docid]: {
+ *       [accessToken]: [role]
+ *     }
+ *   }
+*/
 const permissions = {}
+
+/** Authenticates the access token. */
+const authenticate = (docid, accessToken, { permission } = {}) => {
+  const docPermissions = permissions[docid]
+  return docPermissions && docPermissions[accessToken] === (permission || 'owner')
+}
 
 wss.on('connection', (conn, req, { docName = req.url.slice(1).split('?')[0], gc = true } = {}) => {
   conn.authenticated = false
@@ -37,30 +53,35 @@ const onMessage = async (conn, doc, message) => {
         console.error('auth required')
         return
       }
-      switch(json.type) {
+
+      /** Secures a message endpoint. */
+      const secure = ({ permission } = {}) => {
+        if (!authenticate(conn.docName, json.auth)) {
+          conn.send('access-denied')
+        }
+      }
+
+      switch (json.type) {
         case 'auth':
           if (!permissions[conn.docName]) {
             permissions[conn.docName] = {
               [json.auth]: 'owner'
             }
           }
-          break;
+          break
         case 'share':
-          if (!permissions[conn.docName]?.[json.auth] !== 'owner') {
-            conn.send('access-denied')
-            return
-          }
-          break;
+          if (!secure()) return
+          console.log('share success')
+          break
         default:
-          break;
+          break
       }
-    }
-    catch (e) {
+    } catch (e) {
       console.error('invalid json', message)
       return
     }
 
-    conn.authenticated = permissions[conn.docName]?.[json.auth] === 'owner'
+    conn.authenticated = authenticate(conn.docName, json.auth)
 
     if (conn.authenticated) {
       console.log('authenticated:', json.auth)
