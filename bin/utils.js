@@ -1,18 +1,28 @@
+/**
+ * @module provider/utils
+ */
+
 const Y = require('yjs')
+// @ts-ignore
 const syncProtocol = require('y-protocols/dist/sync.cjs')
+// @ts-ignore
 const awarenessProtocol = require('y-protocols/dist/awareness.cjs')
 
+// @ts-ignore
 const encoding = require('lib0/dist/encoding.cjs')
+// @ts-ignore
 const decoding = require('lib0/dist/decoding.cjs')
+// @ts-ignore
 const map = require('lib0/dist/map.cjs')
-
 const debounce = require('lodash.debounce')
 
+// @ts-ignore
 const callbackHandler = require('./callback.js').callbackHandler
+// @ts-ignore
 const isCallbackSet = require('./callback.js').isCallbackSet
 
-const CALLBACK_DEBOUNCE_WAIT = parseInt(process.env.CALLBACK_DEBOUNCE_WAIT) || 2000
-const CALLBACK_DEBOUNCE_MAXWAIT = parseInt(process.env.CALLBACK_DEBOUNCE_MAXWAIT) || 10000
+const CALLBACK_DEBOUNCE_WAIT = parseInt(process.env.CALLBACK_DEBOUNCE_WAIT || '') || 2000
+const CALLBACK_DEBOUNCE_MAXWAIT = parseInt(process.env.CALLBACK_DEBOUNCE_MAXWAIT || '') || 10000
 
 const wsReadyStateConnecting = 0
 const wsReadyStateOpen = 1
@@ -96,9 +106,6 @@ class WSSharedDoc extends Y.Doc {
      * @type {Map<Object, Set<number>>}
      */
     this.conns = new Map()
-    /**
-     * @type {awarenessProtocol.Awareness}
-     */
     this.awareness = new awarenessProtocol.Awareness(this)
     this.awareness.setLocalState(null)
     /**

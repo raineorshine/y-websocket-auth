@@ -1,16 +1,14 @@
-#!/usr/bin/env node
-
 /**
  * @type {any}
  */
 const WebSocket = require('ws')
 const http = require('http')
 const wss = new WebSocket.Server({ noServer: true })
-const setupWSConnection = require('./utils.js').setupWSConnection
+const setupWSConnection = require('../bin/utils.js').setupWSConnection
 
-const host = process.env.HOST || 'localhost'
-const port = process.env.PORT || 1234
-
+/**
+ * @param {any} opts
+ */
 const createServer = ({ authenticate } = {}) => {
   const server = http.createServer((request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/plain' })
@@ -37,11 +35,15 @@ const createServer = ({ authenticate } = {}) => {
           return
         }
 
-        /** Secures a message endpoint. */
+        /** Secures a message endpoint.
+         * @param {any} permission
+         */
         const secure = ({ permission } = {}) => {
           if (!authenticate(json.auth, conn.docName)) {
             conn.send('access-denied')
+            return false
           }
+          return true
         }
 
         switch (json.type) {
@@ -92,11 +94,7 @@ const createServer = ({ authenticate } = {}) => {
     wss.handleUpgrade(request, socket, head, handleAuth)
   })
 
-  const serverWrapper = {
-    listen: (cb) => server.listen(host, port, cb)
-  }
-
-  return serverWrapper
+  return server
 }
 
 export default createServer

@@ -1,7 +1,7 @@
 const http = require('http')
 
 const CALLBACK_URL = process.env.CALLBACK_URL ? new URL(process.env.CALLBACK_URL) : null
-const CALLBACK_TIMEOUT = process.env.CALLBACK_TIMEOUT || 5000
+const CALLBACK_TIMEOUT = process.env.CALLBACK_TIMEOUT ? parseInt(process.env.CALLBACK_TIMEOUT) : 5000
 const CALLBACK_OBJECTS = process.env.CALLBACK_OBJECTS ? JSON.parse(process.env.CALLBACK_OBJECTS) : {}
 
 exports.isCallbackSet = !!CALLBACK_URL
@@ -9,7 +9,7 @@ exports.isCallbackSet = !!CALLBACK_URL
 /**
  * @param {Uint8Array} update
  * @param {any} origin
- * @param {WSSharedDoc} doc
+ * @param {any} doc
  */
 exports.callbackHandler = (update, origin, doc) => {
   const room = doc.name
@@ -29,11 +29,12 @@ exports.callbackHandler = (update, origin, doc) => {
 }
 
 /**
- * @param {URL} url
+ * @param {URL | null} url
  * @param {number} timeout
  * @param {Object} data
  */
 const callbackRequest = (url, timeout, data) => {
+  if (!url) return
   data = JSON.stringify(data)
   const options = {
     hostname: url.hostname,
@@ -62,7 +63,7 @@ const callbackRequest = (url, timeout, data) => {
 /**
  * @param {string} objName
  * @param {string} objType
- * @param {WSSharedDoc} doc
+ * @param {any} doc
  */
 const getContent = (objName, objType, doc) => {
   switch (objType) {

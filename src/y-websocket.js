@@ -21,6 +21,8 @@ export const messageQueryAwareness = 3
 export const messageAwareness = 1
 export const messageAuth = 2
 
+export { default as server } from './server'
+
 /**
  *                       encoder,          decoder,          provider,          emitSynced, messageType
  * @type {Array<function(encoding.Encoder, decoding.Decoder, WebsocketProvider, boolean,    number):void>}
