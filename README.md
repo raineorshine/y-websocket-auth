@@ -1,39 +1,43 @@
+# y-websocket-auth :tophat: :key:
 
-# y-websocket-auth :tophat:
-> Fork of y-websocket with access token authentication
+[![npm version](https://img.shields.io/npm/v/y-websocket-auth)](https://www.npmjs.com/package/y-websocket-auth)
+<!-- [![Build Status](https://img.shields.io/github/workflow/status/raineorshine/y-websocket-auth/Tests/main?label=tests&logo=github)](https://github.com/raineorshine/y-websocket-auth/actions?query=workflow%3ATests+branch%3Amain) -->
+<!-- [![Coverage Status](https://img.shields.io/coveralls/github/raineorshine/y-websocket-auth/main)](https://coveralls.io/github/raineorshine/y-websocket-auth?branch=main) -->
 
----
+**y-website-auth is a fork of [y-websocket](https://github.com/yjs/y-websocket) with access token authentication**
 
-The Websocket Provider implements a classical client server model. Clients connect to a single endpoint over Websocket. The server distributes awareness information and document updates among clients.
+- Implementation is based on https://github.com/yjs/y-websocket/issues/7#issuecomment-623114183 (thanks to [@WinstonFassett](https://github.com/WinstonFassett))
 
-The Websocket Provider is a solid choice if you want a central source that handles authentication and authorization. Websockets also send header information and cookies, so you can use existing authentication mechanisms with this server.
-
-* Supports cross-tab communication. When you open the same document in the same browser, changes on the document are exchanged via cross-tab communication ([Broadcast Channel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) and [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) as fallback).
-* Supports exchange of awareness information (e.g. cursors).
-
-## Quick Start
-
-### Install dependencies
+## Install
 
 ```sh
-npm i y-websocket
+npm i y-websocket-auth
 ```
 
-### Start a y-websocket server
+## Usage
 
-This repository implements a basic server that you can adopt to your specific use-case. [(source code)](./bin/)
+Create a server (e.g. `server.js`) with your own authenticate function:
 
-Start a y-websocket server:
+```ts
+import { server } from 'y-websocket-auth'
 
-```sh
-HOST=localhost PORT=1234 npx y-websocket
+const server = websocket({ 
+  authenticate: async (accessToken: string) => {
+    // do authentication
+    return true
+  }
+})
+
+server.listen(host, port, () => {
+  console.log(`running at '${host}' on port ${port}`)
+})
 ```
 
-### Client Code:
+client.js:
 
-```js
+```ts
 import * as Y from 'yjs'
-import { WebsocketProvider } from 'y-websocket'
+import { WebsocketProvider } from 'y-websocket-auth'
 
 const doc = new Y.Doc()
 const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc)
@@ -43,13 +47,54 @@ wsProvider.on('status', event => {
 })
 ```
 
-#### Client Code in Node.js
+If you are running the client in NodeJS instead of the browser, you will need to polyfill the [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) object:
 
-The WebSocket provider requires a [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) object to create connection to a server. You can polyfill WebSocket support in Node.js using the [`ws` package](https://www.npmjs.com/package/ws).
-
-```js
+```ts
 const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc, { WebSocketPolyfill: require('ws') })
 ```
+
+Start the server:
+
+```sh
+node server.js
+```
+
+Default configuration can be changed with env variables:
+
+```sh
+# host name
+HOST=localhost
+
+#port
+PORT=1234
+
+# directory to persist ydoc
+YPERSISTENCE=./.persistence.level
+```
+
+## Contributing
+
+
+
+```
+# fork the repo: https://github.com/raineorshine/y-websocket-auth/fork
+git clone https://github.com/YOUR_NAME/y-websocket-auth
+npm install
+npx tsc -w
+```
+
+---
+
+# y-websocket :tophat:
+
+The Websocket Provider implements a classical client server model. Clients connect to a single endpoint over Websocket. The server distributes awareness information and document updates among clients.
+
+The Websocket Provider is a solid choice if you want a central source that handles authentication and authorization. Websockets also send header information and cookies, so you can use existing authentication mechanisms with this server.
+
+* Supports cross-tab communication. When you open the same document in the same browser, changes on the document are exchanged via cross-tab communication ([Broadcast Channel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) and [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) as fallback).
+* Supports exchange of awareness information (e.g. cursors).
+
+...
 
 ## API
 
