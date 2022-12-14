@@ -1,6 +1,8 @@
 
-# y-websocket :tophat:
-> WebSocket Provider for Yjs
+# y-websocket-auth :tophat:
+> Fork of y-websocket with access token authentication
+
+---
 
 The Websocket Provider implements a classical client server model. Clients connect to a single endpoint over Websocket. The server distributes awareness information and document updates among clients.
 

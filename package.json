@@ -1,15 +1,11 @@
 {
-  "name": "y-websocket",
-  "version": "1.4.5",
-  "description": "Websockets provider for Yjs",
+  "name": "y-websocket-auth",
+  "version": "0.0.0",
+  "description": "Websockets provider for Yjs with access token authentication",
   "main": "./dist/y-websocket.cjs",
   "module": "./src/y-websocket.js",
   "types": "./dist/src/y-websocket.d.ts",
   "sideEffects": false,
-  "funding": {
-    "type": "GitHub Sponsors ❤",
-    "url": "https://github.com/sponsors/dmonad"
-  },
   "scripts": {
     "start": "node ./bin/server.js",
     "dist": "rm -rf dist && rollup -c && tsc",
@@ -18,7 +14,6 @@
     "preversion": "npm run lint && npm run dist && test -e dist/src/y-websocket.d.ts && test -e dist/y-websocket.cjs"
   },
   "bin": {
-    "y-websocket-server": "./bin/server.js",
     "y-websocket": "./bin/server.js"
   },
   "files": [
@@ -37,17 +32,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yjs/y-websocket.git"
+    "url": "git+https://github.com/raineorshine/y-websocket-auth.git"
   },
   "keywords": [
     "Yjs"
   ],
   "author": "Kevin Jahns <kevin.jahns@protonmail.com>",
+  "contributors": [
+    "Raine Revere (https://github.com/raineorshine)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yjs/y-websocket/issues"
+    "url": "https://github.com/raineorshine/y-websocket-auth/issues"
   },
-  "homepage": "https://github.com/yjs/y-websocket#readme",
+  "homepage": "https://github.com/raineorshine/y-websocket-auth",
   "standard": {
     "ignore": [
       "/dist",
