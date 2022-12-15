@@ -4,7 +4,7 @@
 const WebSocket = require('ws')
 const http = require('http')
 const wss = new WebSocket.Server({ noServer: true })
-const setupWSConnection = require('../bin/utils.js').setupWSConnection
+const { setupWSConnection } = require('../bin/utils.js')
 
 /**
  * @param {any} opts
@@ -73,12 +73,14 @@ const createServer = ({ authenticate, routes } = {}) => {
         break
     }
 
-    const authenticated = authenticate(conn.docName, json.auth)
+    const authenticated = authenticate(json.auth, conn.docName, json)
 
     if (!authenticated) {
       conn.authenticated = false
       console.error('access denied:', json)
-      conn.send('access-denied')
+      if (conn.readyState === WebSocket.OPEN) {
+        conn.send('access-denied')
+      }
       conn.close()
     } else if (!conn.authenticated) {
       // first time authentication
