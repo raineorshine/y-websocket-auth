@@ -35,25 +35,19 @@ const createServer = ({ authenticate } = {}) => {
           return
         }
 
-        /** Secures a message endpoint.
-         * @param {any} permission
-         */
-        const secure = ({ permission } = {}) => {
-          if (!authenticate(json.auth, conn.docName)) {
-            conn.send('access-denied')
-            return false
-          }
-          return true
-        }
+        /** Secures a message endpoint. */
+        // const secure = () => {
+        //   if (!authenticate(json.auth, conn.docName)) {
+        //     conn.send('access-denied')
+        //     return false
+        //   }
+        //   return true
+        // }
 
         switch (json.type) {
           case 'auth':
             // noop endpoint
             // handled in authenticate
-            break
-          case 'share':
-            if (!secure()) return
-            console.log('share success')
             break
           default:
             break

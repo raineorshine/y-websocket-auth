@@ -20,6 +20,10 @@
     "./package.json": "./package.json",
     "./bin/utils": "./bin/utils.js",
     "./bin/callback": "./bin/callback.js",
+    "./server": {
+      "import": "./src/server.js",
+      "require": "./dist/server.cjs"
+    },
     ".": {
       "import": "./src/y-websocket.js",
       "require": "./dist/y-websocket.cjs"
@@ -50,20 +54,19 @@
   "dependencies": {
     "lib0": "^0.2.52",
     "lodash.debounce": "^4.0.8",
-    "y-protocols": "^1.0.5"
+    "y-protocols": "^1.0.5",
+    "ws": "^6.2.1"
   },
   "devDependencies": {
     "rollup": "^1.32.1",
     "rollup-cli": "^1.0.9",
     "standard": "^12.0.1",
-    "typescript": "^3.9.9",
-    "yjs": "^13.5.0"
+    "typescript": "^3.9.9"
   },
   "peerDependencies": {
-    "yjs": "^13.5.6"
+    "yjs": "13.5.41"
   },
   "optionalDependencies": {
-    "ws": "^6.2.1",
     "y-leveldb": "^0.1.0"
   }
 }

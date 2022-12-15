@@ -6,6 +6,9 @@
 
 **y-website-auth is a fork of [y-websocket](https://github.com/yjs/y-websocket) with access token authentication**
 
+- Authenticates every websocket message using a given access token.
+- Closes the websocket connection when unauthorized.
+- Does not perform any particular authentication method (usernmae/password, JWT, etc)... that's up to you.
 - Implementation is based on https://github.com/yjs/y-websocket/issues/7#issuecomment-623114183 (thanks to [@WinstonFassett](https://github.com/WinstonFassett))
 
 ## Install
@@ -19,7 +22,7 @@ npm i y-websocket-auth
 Create a server (e.g. `server.js`) with your own authenticate function:
 
 ```ts
-import { server } from 'y-websocket-auth'
+const server = require('y-websocket-auth/server')
 
 const server = websocket({ 
   authenticate: async (accessToken: string) => {
@@ -28,7 +31,7 @@ const server = websocket({
   }
 })
 
-server.listen(host, port, () => {
+server.listen(port, host, () => {
   console.log(`running at '${host}' on port ${port}`)
 })
 ```
@@ -40,7 +43,7 @@ import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket-auth'
 
 const doc = new Y.Doc()
-const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc)
+const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc, { auth: ACCESS_TOKEN })
 
 wsProvider.on('status', event => {
   console.log(event.status) // logs "connected" or "disconnected"
