@@ -247,7 +247,13 @@ exports.setupWSConnection = (conn, req, { docName = req.url.slice(1).split('?')[
   const doc = getYDoc(docName, gc)
   doc.conns.set(conn, new Set())
   // listen and reply to events
-  conn.on('message', /** @param {ArrayBuffer} message */ message => messageListener(conn, doc, new Uint8Array(message)))
+  conn.on('message', /** @param {ArrayBuffer | string} message */ message => {
+    // pass ArrayBuffer on to the messageListener for ydoc syncing
+    // ignore string messages, which are handled by server.js
+    if (message instanceof ArrayBuffer) {
+      messageListener(conn, doc, new Uint8Array(message))
+    }
+  })
 
   // Check if connection is still alive
   let pongReceived = true

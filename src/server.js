@@ -9,7 +9,7 @@ const setupWSConnection = require('../bin/utils.js').setupWSConnection
 /**
  * @param {any} opts
  */
-const createServer = ({ authenticate } = {}) => {
+const createServer = ({ authenticate, routes } = {}) => {
   const server = http.createServer((request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/plain' })
     response.end('okay')
@@ -26,53 +26,66 @@ const createServer = ({ authenticate } = {}) => {
   })
 
   const onMessage = async (conn, doc, message) => {
-    if (typeof message === 'string') {
-      let json
-      try {
-        json = JSON.parse(message)
-        if (!json.auth) {
-          console.error('auth required')
+    // Ignore non-string messages, i.e. ArrayBuffer sync updates. They are handled by messageListener.
+    if (typeof message !== 'string') return
+
+    let json
+    try {
+      json = JSON.parse(message)
+    } catch (e) {
+      console.error('invalid json', message)
+      conn.send('invalid json')
+      return
+    }
+
+    if (!json.auth) {
+      console.error('auth required', json)
+      conn.send('auth required in every message')
+      return
+    }
+
+    /** Secures a message endpoint. */
+    // const secure = () => {
+    //   if (!authenticate(json.auth, conn.docName)) {
+    //     conn.send('access-denied')
+    //     return false
+    //   }
+    //   return true
+    // }
+
+    switch (json.type) {
+      case 'auth':
+        // noop endpoint
+        // json.auth parsed in every request (below)
+        break
+      default:
+        if (routes) {
+          if (!routes[json.type]) {
+            console.error('Invalid route', json.type)
+            conn.send('invalid route')
+          }
+          conn.send(JSON.stringify(routes[json.type](json)))
+        } else {
+          console.error('no routes')
+          conn.send('no routes')
           return
         }
+        break
+    }
 
-        /** Secures a message endpoint. */
-        // const secure = () => {
-        //   if (!authenticate(json.auth, conn.docName)) {
-        //     conn.send('access-denied')
-        //     return false
-        //   }
-        //   return true
-        // }
+    const authenticated = authenticate(conn.docName, json.auth)
 
-        switch (json.type) {
-          case 'auth':
-            // noop endpoint
-            // handled in authenticate
-            break
-          default:
-            break
-        }
-      } catch (e) {
-        console.error('invalid json', message)
-        return
-      }
-
-      conn.authenticated = authenticate(conn.docName, json.auth)
-
-      if (conn.authenticated) {
-        console.log('authenticated:', json.auth)
-        conn.send('authenticated')
-        setupWSConnection(conn, conn.req, { docName: conn.docName, gc: conn.gc })
-      } else {
-        console.log('access denied:', json.auth)
-        conn.send('access-denied')
-        conn.close()
-      }
-    } else if (conn.authenticated) {
-      // console.log('onMessage: authenticated')
-      // this._onCollabMessage(conn, doc, new Uint8Array(message))
-    } else {
-      console.log('not authenticated')
+    if (!authenticated) {
+      conn.authenticated = false
+      console.error('access denied:', json)
+      conn.send('access-denied')
+      conn.close()
+    } else if (!conn.authenticated) {
+      // first time authentication
+      // Does this need to be executed again after a disconnection?
+      conn.authenticated = true
+      conn.send('authenticated')
+      setupWSConnection(conn, conn.req, { docName: conn.docName, gc: conn.gc })
     }
   }
 

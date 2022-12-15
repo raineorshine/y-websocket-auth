@@ -389,31 +389,35 @@ export class WebsocketProvider extends Observable {
       if (!this.ws) return
       const _onmessage = this.ws.onmessage
       const _onopen = this.ws.onopen
+
       this.ws.onmessage = event => {
         if (!this.ws) return
+
         const { data } = event
-        console.log('message', data)
+
         if (typeof data === 'string') {
           switch (data) {
             case 'authenticated':
-              console.log('authenticated')
-              this.ws.onmessage = _onmessage
               if (_onopen) {
                 _onopen.call(this.ws, event)
               }
               break
             case 'access-denied':
-              console.log('access denied')
+              console.error('access denied')
               this.disconnect()
               break
             default:
-              console.log('unknown string message', data)
+              console.error('unknown message', data)
               break
           }
+        } else {
+          if (!_onmessage) return
+          _onmessage.call(this.ws, event)
         }
       }
       this.ws.onopen = event => {
         if (!this.ws) return
+        // authenticate immediately when the connection is open
         this.ws.send(JSON.stringify({ type: 'auth', auth }))
       }
     }
@@ -439,6 +443,16 @@ export class WebsocketProvider extends Observable {
       this.emit('synced', [state])
       this.emit('sync', [state])
     }
+  }
+
+  send ({ type, ...props }) {
+    if (!this.ws) return
+    if (props.auth) {
+      console.error({ type, ...props })
+      throw new Error('auth field is reserved')
+    }
+    // send message to server
+    this.ws.send(JSON.stringify({ type, ...props, auth: this.auth }))
   }
 
   destroy () {
