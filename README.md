@@ -25,6 +25,8 @@ Create a server (e.g. `server.js`) with your own authenticate function:
 const { createServer } = require('y-websocket-auth/server')
 
 const server = createServer({ 
+  // accessToken is passed as { auth: ACCESS_TOKEN } 
+  // in the WebsocketProvider constructor on the client-side
   authenticate: async (accessToken: string) => {
     // do authentication
     return true
@@ -43,7 +45,12 @@ import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket-auth'
 
 const doc = new Y.Doc()
-const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc, { auth: ACCESS_TOKEN })
+const wsProvider = new WebsocketProvider(
+  'ws://localhost:1234', 
+  'my-roomname', 
+  doc, 
+  { auth: ACCESS_TOKEN }
+)
 
 wsProvider.on('status', event => {
   console.log(event.status) // logs "connected" or "disconnected"
@@ -53,7 +60,12 @@ wsProvider.on('status', event => {
 If you are running the client in NodeJS instead of the browser, you will need to polyfill the [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) object:
 
 ```ts
-const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc, { WebSocketPolyfill: require('ws') })
+const wsProvider = new WebsocketProvider(
+  'ws://localhost:1234', 
+  'my-roomname', 
+  doc, 
+  { auth: ACCESS_TOKEN, WebSocketPolyfill: require('ws') }
+)
 ```
 
 Start the server:
