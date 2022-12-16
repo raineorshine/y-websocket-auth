@@ -38,46 +38,19 @@ export const createServer = ({ authenticate, routes } = {}) => {
     try {
       json = JSON.parse(message)
     } catch (e) {
-      console.error('invalid json', message)
+      console.error('string message must be json, e.g. { type: "auth", auth: 12345 }', message)
       conn.send('invalid json')
       return
     }
 
+    /**************************************
+    * Authentication
+    **************************************/
+
     if (!json.auth) {
-      console.error('auth required', json)
+      console.error('auth param required', json)
       conn.send('auth required in every message')
       return
-    }
-
-    /** Secures a message endpoint. */
-    // const secure = () => {
-    //   if (!authenticate(json.auth, conn.docName)) {
-    //     conn.send('access-denied')
-    //     return false
-    //   }
-    //   return true
-    // }
-
-    switch (json.type) {
-      case 'auth':
-        // noop endpoint
-        // json.auth parsed in every request (below)
-        break
-      default:
-        if (routes) {
-          if (!routes[json.type]) {
-            console.error('Invalid route', json.type)
-            conn.send('invalid route')
-            return
-          }
-          // sending undefined causes an infinite loop on the client
-          conn.send(routes[json.type](json) || '')
-        } else {
-          console.error('no routes')
-          conn.send('no routes')
-          return
-        }
-        break
     }
 
     const authenticated = authenticate(json.auth, { name: conn.docName, params: json })
@@ -95,6 +68,32 @@ export const createServer = ({ authenticate, routes } = {}) => {
       conn.authenticated = true
       conn.send('authenticated')
       setupWSConnection(conn, conn.req, { docName: conn.docName, gc: conn.gc })
+    }
+
+    /**************************************
+    * Route handling
+    **************************************/
+
+    // noop if request type is auth
+    // json.auth is checked in every request (below)
+    if (json.type === 'auth') return
+
+    if (!routes) {
+      console.error('no routes')
+      conn.send('no routes')
+      return
+    }
+
+    if (!routes[json.type]) {
+      console.error('Invalid route', json.type)
+      conn.send('invalid route')
+      return
+    }
+
+    // Note: sending undefined causes an infinite loop on the client
+    const result = routes[json.type](json)
+    if (result) {
+      conn.send(JSON.stringify(result))
     }
   }
 
