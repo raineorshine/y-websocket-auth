@@ -4,12 +4,17 @@
 const WebSocket = require('ws')
 const http = require('http')
 const wss = new WebSocket.Server({ noServer: true })
-const { setupWSConnection } = require('../bin/utils.js')
+const { getYDoc, setupWSConnection } = require('../bin/utils.js')
+
+/**
+ * @type {any}
+ */
+exports.getYDoc = getYDoc
 
 /**
  * @param {any} opts
  */
-const createServer = ({ authenticate, routes } = {}) => {
+export const createServer = ({ authenticate, routes } = {}) => {
   const server = http.createServer((request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/plain' })
     response.end('okay')
@@ -63,8 +68,10 @@ const createServer = ({ authenticate, routes } = {}) => {
           if (!routes[json.type]) {
             console.error('Invalid route', json.type)
             conn.send('invalid route')
+            return
           }
-          conn.send(JSON.stringify(routes[json.type](json)))
+          // sending undefined causes an infinite loop on the client
+          conn.send(routes[json.type](json) || '')
         } else {
           console.error('no routes')
           conn.send('no routes')
@@ -73,7 +80,7 @@ const createServer = ({ authenticate, routes } = {}) => {
         break
     }
 
-    const authenticated = authenticate(json.auth, conn.docName, json)
+    const authenticated = authenticate(json.auth, { name: conn.docName, params: json })
 
     if (!authenticated) {
       conn.authenticated = false
@@ -105,5 +112,3 @@ const createServer = ({ authenticate, routes } = {}) => {
 
   return server
 }
-
-export default createServer

@@ -22,9 +22,9 @@ npm i y-websocket-auth
 Create a server (e.g. `server.js`) with your own authenticate function:
 
 ```ts
-const server = require('y-websocket-auth/server')
+const { createServer } = require('y-websocket-auth/server')
 
-const server = websocket({ 
+const server = createServer({ 
   authenticate: async (accessToken: string) => {
     // do authentication
     return true
