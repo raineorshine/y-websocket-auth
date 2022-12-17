@@ -86,11 +86,13 @@ export const createServer = ({ authenticate, routes } = {}) => {
 
     if (!routes[json.type]) {
       console.error('Invalid route', json.type)
+      console.info('Valid routes', Object.keys(routes))
       conn.send('invalid route')
       return
     }
 
     // Note: sending undefined causes an infinite loop on the client
+    console.info(json.type)
     const result = routes[json.type](json)
     if (result) {
       conn.send(JSON.stringify(result))
