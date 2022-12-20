@@ -4,7 +4,7 @@
 const WebSocket = require('ws')
 const http = require('http')
 const wss = new WebSocket.Server({ noServer: true })
-const { getYDoc, setupWSConnection } = require('../bin/utils.js')
+const { getYDoc, setupWSConnection } = require('../bin/utils')
 
 /**
  * @type {any}

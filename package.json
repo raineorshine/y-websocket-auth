@@ -13,6 +13,7 @@
     "preversion": "npm run lint && npm run dist && test -e dist/src/y-websocket.d.ts && test -e dist/y-websocket.cjs"
   },
   "files": [
+    "bin/*",
     "dist/*",
     "src/*"
   ],
