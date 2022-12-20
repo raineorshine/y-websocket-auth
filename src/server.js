@@ -9,6 +9,15 @@ const { getYDoc, setupWSConnection } = require('../bin/utils')
 /**
  * @type {any}
  */
+const parseNameFromPath = path => path.slice(1)
+  // strip params from end
+  .split('?')[0]
+  // strip port from beginning
+  .split(/:\d+/).slice(-1)[0]
+
+/**
+ * @type {any}
+ */
 exports.getYDoc = getYDoc
 
 /**
@@ -20,7 +29,7 @@ export const createServer = ({ authenticate, routes } = {}) => {
     response.end('okay')
   })
 
-  wss.on('connection', (conn, req, { docName = req.url.slice(1).split('?')[0], gc = true } = {}) => {
+  wss.on('connection', (conn, req, { docName = parseNameFromPath(req.url), gc = true } = {}) => {
     conn.authenticated = false
     conn.req = req
     conn.docName = docName
