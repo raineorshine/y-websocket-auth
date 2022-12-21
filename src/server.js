@@ -13,7 +13,7 @@ const parseNameFromPath = path => path.slice(1)
   // strip params from end
   .split('?')[0]
   // strip port from beginning
-  .split(/:\d+/).slice(-1)[0]
+  .split(/:\d+\//).slice(-1)[0]
 
 /**
  * @type {any}
