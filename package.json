@@ -1,6 +1,6 @@
 {
   "name": "y-websocket-auth",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Websockets provider for Yjs with access token authentication",
   "main": "./dist/y-websocket.cjs",
   "module": "./src/y-websocket.js",
