@@ -101,7 +101,6 @@ export const createServer = ({ authenticate, routes } = {}) => {
     }
 
     // Note: sending undefined causes an infinite loop on the client
-    console.info(json.type)
     const result = routes[json.type](json)
     if (result) {
       conn.send(JSON.stringify(result))
